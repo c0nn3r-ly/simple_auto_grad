@@ -8,7 +8,25 @@ class Value:
         self._op = _op
         self.label = label
         self.grad = grad
-        self.backward = lambda: None
+        self._backward = lambda: None
+
+    def backward(self):
+
+        #topo
+        topo = []
+        visited = set()
+        def build_topo(v):
+            if v not in visited:
+                visited.add(v)
+                for children in v._prev:
+                    build_topo(children)
+                topo.append(v)
+        build_topo(self)
+
+        self.grad = 1.0
+        for node in reversed(topo):
+            node._backward() 
+
 
     def __repr__(self):
         return f"Value(data={self.data}, grad={self.grad})"
@@ -16,10 +34,10 @@ class Value:
     def __add__(self, other):
         other = other if isinstance(other, Value) else Value(other)
         out = Value(self.data + other.data, (self, other), '+')
-        def backward():
+        def _backward():
             other.grad += out.grad
             self.grad += out.grad
-        out.backward = backward
+        out._backward = _backward
         return out
 
     def __sub__(self, other):
@@ -34,10 +52,10 @@ class Value:
     def __mul__(self, other):
         other = other if isinstance(other, Value) else Value(other)
         out = Value(self.data * other.data, (self, other), '*')
-        def backward():
+        def _backward():
             other.grad += out.grad * self.data
             self.grad += out.grad * other.data
-        out.backward = backward
+        out._backward = _backward
         return out
     
     def __neg__(self):
@@ -49,9 +67,9 @@ class Value:
     def __pow__(self, other):
         assert isinstance(other, (int, float)), "only supporting int/float powers"
         out = Value(self.data ** other, (self,), '**')
-        def backward():
+        def _backward():
             self.grad += out.grad * other * (self.data ** (other - 1))
-        out.backward = backward
+        out._backward = _backward
         return out
 
     def __truediv__(self, other):
@@ -62,32 +80,32 @@ class Value:
 
     def tanh(self):
         out = Value((math.exp(2*self.data) - 1) / (math.exp(2*self.data) + 1), (self, ), 'tanh')
-        def backward():
+        def _backward():
             self.grad += (1 - ((math.exp(2*self.data) - 1) / (math.exp(2*self.data) + 1))**2) * out.grad
-        out.backward = backward
+        out._backward = _backward
         return out       
     
     def exp(self):
         out = Value(math.exp(self.data), (self, ), 'exp')
-        def backward():
+        def _backward():
             self.grad += out.data * out.grad
-        out.backward = backward
+        out._backward = _backward
         return out
 
     def log(self):
         out = Value(math.log(self.data), (self, ), 'log')
-        def backward():
+        def _backward():
             self.grad += (1 /self.data) * out.grad
-        out.backward = backward
+        out._backward = _backward
         return out
     
     def relu(self):
         out = Value(max(0, self.data), (self, ), 'relu')
-        def backward():
+        def _backward():
             if self.data > 0:
                 self.grad += 1 * out.grad
             else:
                 self.grad += 0
-        out.backward = backward
+        out._backward = _backward
         return out
     
