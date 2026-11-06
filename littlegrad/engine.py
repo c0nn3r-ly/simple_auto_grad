@@ -59,3 +59,35 @@ class Value:
     
     def __rtruediv__(self, other):
         return (self ** -1) * other
+
+    def tanh(self):
+        out = Value((math.exp(2*self.data) - 1) / (math.exp(2*self.data) + 1), (self, ), 'tanh')
+        def backward():
+            self.grad += (1 - ((math.exp(2*self.data) - 1) / (math.exp(2*self.data) + 1))**2) * out.grad
+        out.backward = backward
+        return out       
+    
+    def exp(self):
+        out = Value(math.exp(self.data), (self, ), 'exp')
+        def backward():
+            self.grad += out.data * out.grad
+        out.backward = backward
+        return out
+
+    def log(self):
+        out = Value(math.log(self.data), (self, ), 'log')
+        def backward():
+            self.grad += (1 /self.data) * out.grad
+        out.backward = backward
+        return out
+    
+    def relu(self):
+        out = Value(max(0, self.data), (self, ), 'relu')
+        def backward():
+            if self.data > 0:
+                self.grad += 1 * out.grad
+            else:
+                self.grad += 0
+        out.backward = backward
+        return out
+    
