@@ -22,14 +22,15 @@ class Layer:
         self.neurons = [Neuron(nin) for i in range(nout)]
 
     def __call__(self, x):
-        return [n(x) for n in self.neurons]
+        outs = [n(x) for n in self.neurons]
+        return outs[0] if len(outs) == 1 else outs
     
     def parameters(self):
         return [p for n in self.neurons for p in n.parameters()]
-        params = []
-        for n in self.neurons:
-            params.extend(n.parameters())
-        return params
+        # params = []
+        # for n in self.neurons:
+        #     params.extend(n.parameters())
+        # return params
 
 class MLP:
 
