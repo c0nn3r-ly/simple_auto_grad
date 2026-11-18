@@ -4,7 +4,7 @@ from .engine import Value
 class Neuron:
 
     def __init__(self, nin):
-        self.w = [Value(random.uniform(-1, 1)) for i in range(nin) ]
+        self.w = [Value(random.uniform(-1, 1) / nin**0.5) for i in range(nin) ]
         self.b = Value(random.uniform(-1, 1))
 
     def __call__(self, x):
